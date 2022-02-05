@@ -13,9 +13,9 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException, DaoException {
-        CustomConnectionPool.getInstance();
-        UserDaoImpl s = UserDaoImpl.getInstance();
-        s.findAllActiveUsers();
+        //CustomConnectionPool.getInstance();
+        //UserDaoImpl s = UserDaoImpl.getInstance();
+        //s.findAllActiveUsers();
         //Class.forName("com.mysql.cj.jdbc.Driver");
         //Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/bicycles", "root", "mam080171");
     }

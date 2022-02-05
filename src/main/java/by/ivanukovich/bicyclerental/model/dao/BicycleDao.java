@@ -12,4 +12,5 @@ public interface BicycleDao {
     Bicycle findByBicycleId(long id) throws DaoException;
     boolean updateBicycleStatus(long id, BicycleStatus status) throws DaoException ;
     boolean update(Bicycle bicycle) throws DaoException ;
+    boolean create(Bicycle bicycle) throws DaoException;
 }

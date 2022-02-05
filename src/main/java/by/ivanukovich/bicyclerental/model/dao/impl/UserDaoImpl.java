@@ -72,6 +72,11 @@ public class UserDaoImpl implements UserDao {
             "role_id = (SELECT role_id FROM user_role WHERE role = ?) " +
             "WHERE user_id = ?;";
 
+    private static final String BLOCK_USER_QUERY =
+            "UPDATE user " +
+            "SET is_blocked = 1, " +
+            "WHERE user_id = ?;";
+
 
     private static UserDaoImpl instance;
 
@@ -119,6 +124,20 @@ public class UserDaoImpl implements UserDao {
             throw new DaoException(e);
         }
         return userList;
+    }
+
+    @Override
+    public boolean blockUser(Long id) {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = CustomConnectionPool.getInstance().getConnection();
+            statement = connection.prepareStatement(BLOCK_USER_QUERY);
+            statement.setLong(1, id);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return true;
     }
 
     @Override

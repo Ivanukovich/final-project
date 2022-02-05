@@ -21,26 +21,20 @@ public class BicycleDaoImpl implements BicycleDao {
     private static final Logger logger = LogManager.getLogger();
 
     private static final String SELECT_ALL_BICYCLES_QUERY =
-            "SELECT bicycle_id, model, status, rental_point_name " +
+            "SELECT bicycle_id, model, status " +
             "FROM bicycle " +
-            "JOIN bicycle_model ON bicycle.model_id = bicycle_model.model_id " +
-            "JOIN bicycle_status ON bicycle.status_id = bicycle_status.status_id " +
-            "JOIN rental_point ON bicycle.rental_point_id = rental_point.rental_point_id;";
+            "JOIN bicycle_status ON bicycle.status_id = bicycle_status.status_id ";
 
     private static final String SELECT_ALL_ACTIVE_BICYCLES_QUERY =
-            "SELECT bicycle_id, model, status, rental_point_name " +
+            "SELECT bicycle_id, model, status " +
             "FROM bicycle " +
-            "JOIN bicycle_model ON bicycle.model_id = bicycle_model.model_id " +
             "JOIN bicycle_status ON bicycle.status_id = bicycle_status.status_id " +
-            "JOIN rental_point ON bicycle.rental_point_id = rental_point.rental_point_id " +
             "WHERE bicycle_status.status = \"active\";";
 
     private static final String SELECT_BY_BICYCLE_ID_QUERY =
-            "SELECT bicycle_id, model, status, rental_point_name " +
+            "SELECT bicycle_id, model, status " +
             "FROM bicycle " +
-            "JOIN bicycle_model ON bicycle.model_id = bicycle_model.model_id " +
             "JOIN bicycle_status ON bicycle.status_id = bicycle_status.status_id " +
-            "JOIN rental_point ON bicycle.rental_point_id = rental_point.rental_point_id " +
             "WHERE bicycle_id = ?;";
 
     private static final String UPDATE_BICYCLE_STATUS_QUERY =
@@ -50,10 +44,13 @@ public class BicycleDaoImpl implements BicycleDao {
 
     private static final String UPDATE_QUERY =
             "UPDATE bicycle " +
-            "SET model_id = (SELECT model_id FROM bicycle_model WHERE model = ?) " +
+            "SET model_id = ? " +
             "status_id = (SELECT status_id FROM bicycle_status WHERE status = ?) " +
-            "rental_point_id = (SELECT rental_point_id FROM rental_point WHERE rental_point_name = ?) " +
             "WHERE bicycle_id = ?;";
+
+    private static final String INSERT_BICYCLE_QUERY =
+            "INSERT INTO bicycle (bicycle_id, model, status_id) " +
+            "VALUES (?, ?, (SELECT status_id FROM bicycle_status WHERE status = ?))";
 
     private static UserDaoImpl instance;
 
@@ -133,10 +130,9 @@ public class BicycleDaoImpl implements BicycleDao {
         try {
             connection = CustomConnectionPool.getInstance().getConnection();
             statement = connection.prepareStatement(UPDATE_QUERY);
-            statement.setString(1, bicycle.getModel().getModelName());
+            statement.setString(1, bicycle.getModel());
             statement.setString(2, bicycle.getStatus().getStatusName());
-            statement.setString(3, bicycle.getLocation());
-            statement.setLong(4, bicycle.getBicycleId());
+            statement.setLong(3, bicycle.getBicycleId());
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new DaoException("Failed to find user: ", e);
@@ -144,12 +140,27 @@ public class BicycleDaoImpl implements BicycleDao {
         return true;
     }
 
+    @Override
+    public boolean create(Bicycle bicycle) throws DaoException {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = CustomConnectionPool.getInstance().getConnection();
+            statement = connection.prepareStatement(INSERT_BICYCLE_QUERY);
+            statement.setLong(1, bicycle.getBicycleId());
+            statement.setString(2, bicycle.getModel());
+            statement.setString(3, bicycle.getStatus().getStatusName());
+            return statement.executeUpdate() != 0;
+        } catch (SQLException e) {
+            throw new DaoException("Failed to find user: ", e);
+        }
+    }
+
     private Bicycle extract(ResultSet resultSet) throws SQLException {
         return new Bicycle.Builder()
                 .bicycleId(resultSet.getLong("user_id"))
-                .model(BicycleModel.valueOf(resultSet.getString("model")))
+                .model(resultSet.getString("model"))
                 .status(BicycleStatus.valueOf(resultSet.getString("status")))
-                .location(String.valueOf(resultSet.getString("rental_point_name")))
                 .build();
     }
 }
